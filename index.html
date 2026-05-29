@@ -219,12 +219,25 @@
       }
     }
 
-    employeeInput.addEventListener('input', updateButtonStates);
+    employeeInput.addEventListener('input', () => {
+      localStorage.setItem('employee_name', employeeInput.value.trim());
+      updateButtonStates();
+    });
 
     // -----------------------------------------------------------------
     // 6. 高精度定位捕获与动态刷新
     // -----------------------------------------------------------------
     function initGPS() {
+      // 优先从 localStorage 恢复姓名
+      try {
+        const savedName = localStorage.getItem('employee_name');
+        if (savedName) {
+          employeeInput.value = savedName;
+        }
+      } catch (e) {
+        console.error("无法加载本地缓存的姓名:", e);
+      }
+
       if (!navigator.geolocation) {
         showGPSError("不支持GPS", "您的智能手机或当前浏览器不支持 HTML5 定位功能，请更换手机或在高级微信/Safari浏览器内打开。");
         return;
