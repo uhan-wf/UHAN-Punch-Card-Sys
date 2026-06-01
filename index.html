@@ -81,24 +81,46 @@
       </div>
     </div>
 
-    <!-- 打卡双键按钮区 / Quick Check-in Actions -->
-    <div class="mt-6 space-y-3">
+    <!-- 打卡四键按钮区 / Quick Check-in Actions -->
+    <div class="mt-6 grid grid-cols-2 gap-3">
       <button 
         id="btnIn" 
-        class="button-ripple w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2.5 bg-slate-200 text-slate-400 cursor-not-allowed shadow-md"
+        class="button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-slate-200 text-slate-400 cursor-not-allowed shadow-md"
         disabled
       >
         <i class="lucide-log-in text-xl"></i>
-        <span>上班打卡 / Clock In</span>
+        <span>上班打卡</span>
+        <span class="text-[9px] font-medium opacity-80">Clock In</span>
+      </button>
+
+      <button 
+        id="btnLunchOut" 
+        class="button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-slate-200 text-slate-400 cursor-not-allowed shadow-md"
+        disabled
+      >
+        <i class="lucide-coffee text-xl"></i>
+        <span>外出午餐</span>
+        <span class="text-[9px] font-medium opacity-80">Lunch Out</span>
+      </button>
+
+      <button 
+        id="btnLunchIn" 
+        class="button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-slate-200 text-slate-400 cursor-not-allowed shadow-md"
+        disabled
+      >
+        <i class="lucide-utensils text-xl"></i>
+        <span>午餐返回</span>
+        <span class="text-[9px] font-medium opacity-80">Lunch Return</span>
       </button>
 
       <button 
         id="btnOut" 
-        class="button-ripple w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2.5 bg-slate-200 text-slate-400 cursor-not-allowed shadow-md"
+        class="button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-slate-200 text-slate-400 cursor-not-allowed shadow-md"
         disabled
       >
         <i class="lucide-log-out text-xl"></i>
-        <span>下班打卡 / Clock Out</span>
+        <span>下班打卡</span>
+        <span class="text-[9px] font-medium opacity-80">Clock Out</span>
       </button>
     </div>
 
@@ -124,7 +146,7 @@
     // -----------------------------------------------------------------
     // 1. 系统核心配置参数 (由服务端一键注入)
     // -----------------------------------------------------------------
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzvHG9bPFSaTpvNnLAkrNyzfE06OcrVh-mhXDmxsv2gyjwGhTsnMKV5PorOkwVW-ggzjg/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtp9Vxw8MDIpsCYIFl_hqY3Dj-96VGCyzbtODrz0uW-27GgGwMdTeu5MBJ7SG7NzDtBA/exec";
     const OFFICE_LAT = 1.5363733436368758; 
     const OFFICE_LNG = 103.70875021752089;
     const SAFE_RADIUS = 50; // 50米
@@ -138,6 +160,8 @@
     // 2. DOM 元素缓存
     const employeeInput = document.getElementById('employeeName');
     const btnIn = document.getElementById('btnIn');
+    const btnLunchOut = document.getElementById('btnLunchOut');
+    const btnLunchIn = document.getElementById('btnLunchIn');
     const btnOut = document.getElementById('btnOut');
     const statusPanel = document.getElementById('statusPanel');
     const statusIconContainer = document.getElementById('statusIconContainer');
@@ -203,19 +227,39 @@
       const isWithinZone = computedDistance !== null && computedDistance <= SAFE_RADIUS;
 
       if (hasName && isWithinZone) {
-        // 解锁按钮：上班打卡(绿色)
         btnIn.disabled = false;
-        btnIn.className = "button-ripple w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2.5 bg-emerald-600 hover:bg-emerald-700 active:transform active:scale-[0.98] text-white cursor-pointer shadow-lg shadow-emerald-200 transition-all";
-        
-        // 解锁按钮：下班打卡(红色)
+        btnIn.className = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white cursor-pointer shadow-lg shadow-emerald-200 transition-all";
+        btnIn.innerHTML = '<i class="lucide-log-in text-xl"></i><span>上班打卡</span><span class="text-[9px] font-semibold opacity-80 font-normal">Clock In</span>';
+
+        btnLunchOut.disabled = false;
+        btnLunchOut.className = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white cursor-pointer shadow-lg shadow-amber-200 transition-all";
+        btnLunchOut.innerHTML = '<i class="lucide-coffee text-xl"></i><span>外出午餐</span><span class="text-[9px] font-semibold opacity-80 font-normal">Lunch Out</span>';
+
+        btnLunchIn.disabled = false;
+        btnLunchIn.className = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-sky-600 hover:bg-sky-700 active:scale-[0.98] text-white cursor-pointer shadow-lg shadow-sky-200 transition-all";
+        btnLunchIn.innerHTML = '<i class="lucide-utensils text-xl"></i><span>午餐返回</span><span class="text-[9px] font-semibold opacity-80 font-normal">Lunch Return</span>';
+
         btnOut.disabled = false;
-        btnOut.className = "button-ripple w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2.5 bg-rose-600 hover:bg-rose-700 active:transform active:scale-[0.98] text-white cursor-pointer shadow-lg shadow-rose-200 transition-all";
+        btnOut.className = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white cursor-pointer shadow-lg shadow-rose-200 transition-all";
+        btnOut.innerHTML = '<i class="lucide-log-out text-xl"></i><span>下班打卡</span><span class="text-[9px] font-semibold opacity-80 font-normal">Clock Out</span>';
       } else {
-        // 软置灰
+        const disabledClasses = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-slate-200 text-slate-400 cursor-not-allowed shadow-none transition-all";
+        
         btnIn.disabled = true;
-        btnIn.className = "button-ripple w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2.5 bg-slate-200 text-slate-400 cursor-not-allowed shadow-none transition-all";
+        btnIn.className = disabledClasses;
+        btnIn.innerHTML = '<i class="lucide-log-in text-xl"></i><span>上班打卡</span><span class="text-[9px] font-medium opacity-80 font-normal">Clock In</span>';
+
+        btnLunchOut.disabled = true;
+        btnLunchOut.className = disabledClasses;
+        btnLunchOut.innerHTML = '<i class="lucide-coffee text-xl"></i><span>外出午餐</span><span class="text-[9px] font-medium opacity-80 font-normal">Lunch Out</span>';
+
+        btnLunchIn.disabled = true;
+        btnLunchIn.className = disabledClasses;
+        btnLunchIn.innerHTML = '<i class="lucide-utensils text-xl"></i><span>午餐返回</span><span class="text-[9px] font-medium opacity-80 font-normal">Lunch Return</span>';
+
         btnOut.disabled = true;
-        btnOut.className = "button-ripple w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2.5 bg-slate-200 text-slate-400 cursor-not-allowed shadow-none transition-all";
+        btnOut.className = disabledClasses;
+        btnOut.innerHTML = '<i class="lucide-log-out text-xl"></i><span>下班打卡</span><span class="text-[9px] font-medium opacity-80 font-normal">Clock Out</span>';
       }
     }
 
@@ -337,21 +381,33 @@
         return;
       }
 
-      const typeLabel = type === 'IN' ? '上班打卡 / Clock In' : '下班打卡 / Clock Out';
+      let typeLabel = "上班打卡 / Clock In";
+      let typeText = "上班";
+      let targetButton = btnIn;
 
-      // 显示提交遮罩
-      const originalText = type === 'IN' ? '上班打卡 / Clock In' : '下班打卡 / Clock Out';
-      const targetButton = type === 'IN' ? btnIn : btnOut;
-      const otherButton = type === 'IN' ? btnOut : btnIn;
+      if (type === 'IN') {
+        typeLabel = '上班打卡 / Clock In'; typeText = '上班'; targetButton = btnIn;
+      } else if (type === 'LUNCH_OUT') {
+        typeLabel = '外出午餐 / Lunch Out'; typeText = '出去午餐'; targetButton = btnLunchOut;
+      } else if (type === 'LUNCH_IN') {
+        typeLabel = '午餐返回 / Lunch Return'; typeText = '午餐返回'; targetButton = btnLunchIn;
+      } else if (type === 'OUT') {
+        typeLabel = '下班打卡 / Clock Out'; typeText = '下班'; targetButton = btnOut;
+      }
 
-      targetButton.disabled = true;
-      otherButton.disabled = true;
+      // 静默屏蔽所有按钮
+      btnIn.disabled = true;
+      btnLunchOut.disabled = true;
+      btnLunchIn.disabled = true;
+      btnOut.disabled = true;
+
+      const originalHtml = targetButton.innerHTML;
       targetButton.innerHTML = '<i class="lucide-refresh-cw text-sm animate-spin"></i> 正在安全登记...';
 
       // 组装发往 Google Sheets 的标准数据
       const postData = {
         nameOrId: nameVal,
-        type: type === 'IN' ? '上班' : '下班',
+        type: typeText,
         latitude: userLat,
         longitude: userLng,
         distance: computedDistance,
@@ -379,8 +435,8 @@
         console.error("提交异常：", error);
         alert("网络通信异常！可能由于 Google 容器初始化中，数据正在排队等候。若重试仍失败，请检查打卡地址域名。");
       } finally {
-        // 重置按钮按钮状态
-        targetButton.innerHTML = originalText;
+        // 重置按钮
+        targetButton.innerHTML = originalHtml;
         updateButtonStates();
       }
     }
@@ -433,6 +489,8 @@
 
     // 绑定打卡点击事件
     btnIn.addEventListener('click', () => submitAttendance('IN'));
+    btnLunchOut.addEventListener('click', () => submitAttendance('LUNCH_OUT'));
+    btnLunchIn.addEventListener('click', () => submitAttendance('LUNCH_IN'));
     btnOut.addEventListener('click', () => submitAttendance('OUT'));
 
     // 初始化运行
