@@ -75,7 +75,7 @@
         <div class="border-t border-slate-100 pt-2.5 flex items-center justify-between">
           <span class="text-xs text-slate-500 font-semibold uppercase tracking-wider">打卡要求 (Check-in Safe Zone):</span>
           <span class="text-xs font-bold text-indigo-700 px-2.5 py-1 bg-indigo-50 rounded-full code-font">
-            ≤ 50 米 (m)
+            ≤ 40 米 (m)
           </span>
         </div>
       </div>
@@ -149,7 +149,7 @@
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtp9Vxw8MDIpsCYIFl_hqY3Dj-96VGCyzbtODrz0uW-27GgGwMdTeu5MBJ7SG7NzDtBA/exec";
     const OFFICE_LAT = 1.5363733436368758; 
     const OFFICE_LNG = 103.70875021752089;
-    const SAFE_RADIUS = 50; // 50米
+    const SAFE_RADIUS = 40; // 50米
 
     // 员工经纬度全局变量
     let userLat = null;
@@ -220,46 +220,90 @@
     }
 
     // -----------------------------------------------------------------
-    // 5. 校验按钮使能状态
+    // 5. 校验按钮使能状态与今日已打卡防误触处理
     // -----------------------------------------------------------------
+    function getTodayKey() {
+      const d = new Date();
+      return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    }
+
+    function isPunchDoneToday(type) {
+      const name = employeeInput.value.trim().toLowerCase();
+      if (!name) return false;
+      const todayKey = getTodayKey();
+      try {
+        const key = 'punch_' + name + '_' + todayKey + '_' + type;
+        return localStorage.getItem(key) === 'done';
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function markPunchDoneToday(type) {
+      const name = employeeInput.value.trim().toLowerCase();
+      if (!name) return;
+      const todayKey = getTodayKey();
+      try {
+        const key = 'punch_' + name + '_' + todayKey + '_' + type;
+        localStorage.setItem(key, 'done');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     function updateButtonStates() {
       const hasName = employeeInput.value.trim().length > 0;
       const isWithinZone = computedDistance !== null && computedDistance <= SAFE_RADIUS;
 
-      if (hasName && isWithinZone) {
+      const inDone = isPunchDoneToday('IN');
+      const lunchOutDone = isPunchDoneToday('LUNCH_OUT');
+      const lunchInDone = isPunchDoneToday('LUNCH_IN');
+      const outDone = isPunchDoneToday('OUT');
+
+      const disabledClasses = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-450 border border-slate-200 cursor-not-allowed shadow-none transition-all";
+
+      // 1. 上班打卡
+      if (hasName && isWithinZone && !inDone) {
         btnIn.disabled = false;
         btnIn.className = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white cursor-pointer shadow-lg shadow-emerald-200 transition-all";
         btnIn.innerHTML = '<i class="lucide-log-in text-xl"></i><span>上班打卡</span><span class="text-[9px] font-semibold opacity-80 font-normal">Clock In</span>';
+      } else {
+        btnIn.disabled = true;
+        btnIn.className = disabledClasses;
+        btnIn.innerHTML = '<i class="lucide-log-in text-xl"></i><span>' + (inDone ? '今日已上班' : '上班打卡') + '</span><span class="text-[9px] font-medium opacity-80 font-normal">' + (inDone ? 'Done' : 'Clock In') + '</span>';
+      }
 
+      // 2. 外出午餐
+      if (hasName && isWithinZone && !lunchOutDone) {
         btnLunchOut.disabled = false;
         btnLunchOut.className = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white cursor-pointer shadow-lg shadow-amber-200 transition-all";
         btnLunchOut.innerHTML = '<i class="lucide-coffee text-xl"></i><span>外出午餐</span><span class="text-[9px] font-semibold opacity-80 font-normal">Lunch Out</span>';
+      } else {
+        btnLunchOut.disabled = true;
+        btnLunchOut.className = disabledClasses;
+        btnLunchOut.innerHTML = '<i class="lucide-coffee text-xl"></i><span>' + (lunchOutDone ? '今日已午息' : '外出午餐') + '</span><span class="text-[9px] font-medium opacity-80 font-normal">' + (lunchOutDone ? 'Done' : 'Lunch Out') + '</span>';
+      }
 
+      // 3. 午餐返回
+      if (hasName && isWithinZone && !lunchInDone) {
         btnLunchIn.disabled = false;
         btnLunchIn.className = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-sky-600 hover:bg-sky-700 active:scale-[0.98] text-white cursor-pointer shadow-lg shadow-sky-200 transition-all";
         btnLunchIn.innerHTML = '<i class="lucide-utensils text-xl"></i><span>午餐返回</span><span class="text-[9px] font-semibold opacity-80 font-normal">Lunch Return</span>';
+      } else {
+        btnLunchIn.disabled = true;
+        btnLunchIn.className = disabledClasses;
+        btnLunchIn.innerHTML = '<i class="lucide-utensils text-xl"></i><span>' + (lunchInDone ? '今日已返回' : '午餐返回') + '</span><span class="text-[9px] font-medium opacity-80 font-normal">' + (lunchInDone ? 'Done' : 'Lunch Return') + '</span>';
+      }
 
+      // 4. 下班打卡
+      if (hasName && isWithinZone && !outDone) {
         btnOut.disabled = false;
         btnOut.className = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white cursor-pointer shadow-lg shadow-rose-200 transition-all";
         btnOut.innerHTML = '<i class="lucide-log-out text-xl"></i><span>下班打卡</span><span class="text-[9px] font-semibold opacity-80 font-normal">Clock Out</span>';
       } else {
-        const disabledClasses = "button-ripple p-4 rounded-xl font-bold text-base flex flex-col items-center justify-center gap-1 bg-slate-200 text-slate-400 cursor-not-allowed shadow-none transition-all";
-        
-        btnIn.disabled = true;
-        btnIn.className = disabledClasses;
-        btnIn.innerHTML = '<i class="lucide-log-in text-xl"></i><span>上班打卡</span><span class="text-[9px] font-medium opacity-80 font-normal">Clock In</span>';
-
-        btnLunchOut.disabled = true;
-        btnLunchOut.className = disabledClasses;
-        btnLunchOut.innerHTML = '<i class="lucide-coffee text-xl"></i><span>外出午餐</span><span class="text-[9px] font-medium opacity-80 font-normal">Lunch Out</span>';
-
-        btnLunchIn.disabled = true;
-        btnLunchIn.className = disabledClasses;
-        btnLunchIn.innerHTML = '<i class="lucide-utensils text-xl"></i><span>午餐返回</span><span class="text-[9px] font-medium opacity-80 font-normal">Lunch Return</span>';
-
         btnOut.disabled = true;
         btnOut.className = disabledClasses;
-        btnOut.innerHTML = '<i class="lucide-log-out text-xl"></i><span>下班打卡</span><span class="text-[9px] font-medium opacity-80 font-normal">Clock Out</span>';
+        btnOut.innerHTML = '<i class="lucide-log-out text-xl"></i><span>' + (outDone ? '今日已下班' : '下班打卡') + '</span><span class="text-[9px] font-medium opacity-80 font-normal">' + (outDone ? 'Done' : 'Clock Out') + '</span>';
       }
     }
 
@@ -430,6 +474,7 @@
         // 提示：因为 no-cors 模式下我们无法直接拿到返回内容，但可以确保请求成功触达
         // 故我们在 no-cors 模式下均视为提交成功。
         showSuccessModal(nameVal, typeLabel);
+        markPunchDoneToday(type);
         
       } catch (error) {
         console.error("提交异常：", error);
